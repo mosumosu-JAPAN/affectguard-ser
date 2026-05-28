@@ -175,6 +175,18 @@ Suggested implementation roadmap:
 - V6: expand toward a 60-case structured seed set,
 - V7: annotator validation / user study.
 
+## Pilot Result Tables
+
+After running optional model judging, the app can export three CSV files for pilot analysis:
+
+- `results/model_outputs_review.csv`: detailed model outputs per case, including gold action, model action, confidence, evidence, and whether the action was correct.
+- `results/summary_by_model.csv`: aggregate action accuracy, unsafe confidence rate, and average confidence by model.
+- `results/summary_by_failure_type.csv`: error patterns by failure category, such as premature closure, pragmatic flattening, over-advice, and missed handoff.
+
+These tables are intended to make the MVP easier to inspect, debug, and share with research collaborators. They should not be interpreted as benchmark results until the labels and model outputs are validated.
+
+Pilot summaries use the latest output for each model-case pair when multiple runs exist.
+
 ## Run Locally
 
 ```bash
