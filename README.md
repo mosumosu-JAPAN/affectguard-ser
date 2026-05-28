@@ -1,5 +1,7 @@
 # AffectGuard-SER
 
+[Live demo](https://affectguard-ser-7jl7znidenkmscmure792n.streamlit.app/)
+
 ![AffectGuard-SER screenshot](assets/screenshot.png)
 
 A compact failure probe for MERaLiON-style speech-to-agent systems.
