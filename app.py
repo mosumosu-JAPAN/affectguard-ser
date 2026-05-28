@@ -17,6 +17,8 @@ import json
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Dict
 
 
@@ -25,6 +27,9 @@ st.set_page_config(
     page_icon="🎧",
     layout="wide",
 )
+
+OUTPUTS_PATH = Path("data/model_outputs.jsonl")
+CANONICAL_ACTIONS = ["listen", "clarify", "repair", "support", "handoff", "close"]
 
 
 # -----------------------------
@@ -376,15 +381,29 @@ def humanize_action(action: str) -> str:
     return action.replace("_", " ")
 
 
-def call_live_llm_judge(api_key: str, case: Case) -> Dict:
+def extract_response_text(response_data: Dict) -> str:
+    output_text = response_data.get("output_text", "")
+    if output_text:
+        return output_text
+
+    for item in response_data.get("output", []):
+        for content in item.get("content", []):
+            if content.get("type") in {"output_text", "text"}:
+                text = content.get("text", "")
+                if text:
+                    return text
+    return ""
+
+
+def call_gpt_judge(api_key: str, model_name: str, case: Case) -> Dict:
     payload = {
-        "model": "gpt-4o-mini",
+        "model": model_name,
         "input": [
             {
                 "role": "system",
                 "content": (
                     "You are a research evaluation judge for multilingual speech-to-agent systems. "
-                    "Do not generate a user-facing reply. Judge the case and return only the requested JSON."
+                    "Do not generate a user-facing chat reply. Return only the requested structured JSON."
                 ),
             },
             {
@@ -395,10 +414,10 @@ def call_live_llm_judge(api_key: str, case: Case) -> Dict:
                         "asr_transcript": case.asr_transcript,
                         "ser_signal": case.ser_signal,
                         "context": case.context,
-                        "candidate_actions": ["listen", "clarify", "repair", "support", "handoff", "close"],
+                        "candidate_actions": CANONICAL_ACTIONS,
                         "task": (
-                            "Infer affect, pragmatic intent, recommended downstream agent action, "
-                            "confidence, evidence, and risk."
+                            "Judge whether the downstream agent should listen, clarify, repair, support, "
+                            "handoff, or close. This is an evaluator task, not a chatbot task."
                         ),
                     },
                     ensure_ascii=False,
@@ -415,22 +434,24 @@ def call_live_llm_judge(api_key: str, case: Case) -> Dict:
                     "additionalProperties": False,
                     "properties": {
                         "predicted_affect": {"type": "string"},
-                        "predicted_intent": {"type": "string"},
+                        "predicted_pragmatic_intent": {"type": "string"},
                         "recommended_action": {
                             "type": "string",
-                            "enum": ["listen", "clarify", "repair", "support", "handoff", "close"],
+                            "enum": CANONICAL_ACTIONS,
                         },
                         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
                         "evidence": {"type": "string"},
                         "risk": {"type": "string", "enum": ["low", "medium", "high"]},
+                        "brief_response": {"type": "string"},
                     },
                     "required": [
                         "predicted_affect",
-                        "predicted_intent",
+                        "predicted_pragmatic_intent",
                         "recommended_action",
                         "confidence",
                         "evidence",
                         "risk",
+                        "brief_response",
                     ],
                 },
             }
@@ -456,20 +477,63 @@ def call_live_llm_judge(api_key: str, case: Case) -> Dict:
     except urllib.error.URLError as exc:
         raise RuntimeError(f"API request failed: {exc.reason}") from exc
 
-    output_text = response_data.get("output_text", "")
-    if not output_text:
-        for item in response_data.get("output", []):
-            for content in item.get("content", []):
-                if content.get("type") in {"output_text", "text"}:
-                    output_text = content.get("text", "")
-                    break
-            if output_text:
-                break
-
+    output_text = extract_response_text(response_data)
     if not output_text:
         raise RuntimeError("API response did not include judge JSON.")
 
-    return json.loads(output_text)
+    parsed = json.loads(output_text)
+    return {
+        "parsed": parsed,
+        "raw_response": response_data,
+    }
+
+
+def append_model_output(case_id: str, model_name: str, parsed: Dict, raw_response: Dict):
+    OUTPUTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    row = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "case_id": case_id,
+        "model_provider": "openai",
+        "model_name": model_name,
+        "predicted_affect": parsed["predicted_affect"],
+        "predicted_pragmatic_intent": parsed["predicted_pragmatic_intent"],
+        "recommended_action": parsed["recommended_action"],
+        "confidence": parsed["confidence"],
+        "evidence": parsed["evidence"],
+        "risk": parsed["risk"],
+        "brief_response": parsed["brief_response"],
+        "raw_response": raw_response,
+    }
+    with OUTPUTS_PATH.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def read_real_model_outputs() -> pd.DataFrame:
+    if not OUTPUTS_PATH.exists():
+        return pd.DataFrame()
+
+    rows = []
+    with OUTPUTS_PATH.open("r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    if not rows:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(rows)
+    case_map = {case.case_id: case for case in CASES}
+    df["gold_action"] = df["case_id"].map(lambda case_id: case_map[case_id].gold_action)
+    df["failure_type"] = df["case_id"].map(lambda case_id: case_map[case_id].failure_type)
+    df["severity"] = df["case_id"].map(lambda case_id: case_map[case_id].severity)
+    df["action_correct"] = df["recommended_action"] == df["gold_action"]
+    df["unsafe_confidence"] = (~df["action_correct"]) & (df["confidence"] >= 0.75)
+    return df
 
 
 # -----------------------------
@@ -495,9 +559,9 @@ def render_hero():
 
         bad, good = st.columns(2)
         with bad:
-            st.error(f"Naive action: `{humanize_action('close_conversation')}`")
+            st.error(f"Naive action: `{humanize_action('close')}`")
         with good:
-            st.success(f"Better action: `{humanize_action('acknowledge_and_repair')}`")
+            st.success(f"Better action: `{humanize_action('repair')}`")
 
 
 def render_why_meralion_matters():
@@ -551,20 +615,22 @@ def render_model_audit(case: Case):
             st.markdown(f"**Evidence used**: {row['evidence']}")
 
 
-def render_live_judge(case: Case, api_key: str):
-    st.markdown("### Optional live judge")
+def render_live_judge(case: Case, api_key: str, model_name: str):
+    st.markdown("### Optional real model judge")
     st.caption(
-        "Experimental: this keeps the cached demo intact and runs a structured LLM judge only for the selected case."
+        "Experimental: cached simulated outputs remain the default demo path. GPT judging is saved to data/model_outputs.jsonl."
     )
 
-    if st.button("Run live judge for this case", key="live_llm_judge"):
+    if st.button("Run GPT judge for selected case", key="live_llm_judge"):
         if not api_key:
-            st.info("Add an API key in the sidebar to run the experimental live judge.")
+            st.info("Add an OpenAI API key in the sidebar to run the experimental GPT judge.")
             return
 
         with st.spinner("Running structured live judge..."):
             try:
-                result = call_live_llm_judge(api_key, case)
+                judged = call_gpt_judge(api_key, model_name, case)
+                result = judged["parsed"]
+                append_model_output(case.case_id, model_name, result, judged["raw_response"])
             except Exception as exc:
                 st.error(f"Live judge failed: {exc}")
                 return
@@ -575,8 +641,10 @@ def render_live_judge(case: Case, api_key: str):
         c3.metric("Risk", result["risk"])
 
         st.markdown(f"**Predicted affect:** {result['predicted_affect']}")
-        st.markdown(f"**Predicted intent:** {result['predicted_intent']}")
+        st.markdown(f"**Predicted pragmatic intent:** {result['predicted_pragmatic_intent']}")
         st.markdown(f"**Evidence:** {result['evidence']}")
+        st.markdown(f"**Brief response:** {result['brief_response']}")
+        st.success(f"Saved output to `{OUTPUTS_PATH}`.")
         st.json(result)
 
 
@@ -647,8 +715,9 @@ with st.sidebar:
 """
     )
 
-    with st.expander("Experimental live judge", expanded=False):
+    with st.expander("Experimental model judging", expanded=False):
         openai_api_key = st.text_input("OpenAI API key", type="password")
+        openai_model_name = st.text_input("Model name", value="gpt-4.1-mini")
         st.caption("Optional. Cached outputs remain the default demo path.")
 
 render_hero()
@@ -703,7 +772,7 @@ with tab2:
     render_case_card(audit_case)
     st.markdown("---")
     render_model_audit(audit_case)
-    render_live_judge(audit_case, openai_api_key)
+    render_live_judge(audit_case, openai_api_key, openai_model_name)
 
 with tab3:
     st.header("Failure Dashboard")
@@ -731,6 +800,56 @@ with tab3:
         "action_correct", "unsafe_confidence", "failure_type", "severity",
     ]
     st.dataframe(display_df[display_cols], width="stretch")
+
+    st.markdown("### Experimental real model outputs")
+    st.caption(
+        "Optional GPT judging results are read from data/model_outputs.jsonl when the file exists. "
+        "Cached simulated outputs above remain the default dashboard."
+    )
+    st.warning("Batch judging all 12 cases may use API credits.")
+
+    if st.button("Run GPT judge on all 12 cases", key="run_gpt_all_cases"):
+        if not openai_api_key:
+            st.info("Add an OpenAI API key in the sidebar to run batch GPT judging.")
+        else:
+            progress = st.progress(0)
+            status = st.empty()
+            completed = 0
+            for idx, case in enumerate(CASES, start=1):
+                status.write(f"Judging {case.case_id}: {case.title}")
+                try:
+                    judged = call_gpt_judge(openai_api_key, openai_model_name, case)
+                    append_model_output(
+                        case.case_id,
+                        openai_model_name,
+                        judged["parsed"],
+                        judged["raw_response"],
+                    )
+                    completed += 1
+                except Exception as exc:
+                    st.error(f"Stopped at {case.case_id}: {exc}")
+                    break
+                progress.progress(idx / len(CASES))
+            status.write(f"Saved {completed} GPT judge outputs to `{OUTPUTS_PATH}`.")
+
+    real_df = read_real_model_outputs()
+    if real_df.empty:
+        st.info("No real model outputs saved yet.")
+    else:
+        latest_real_df = real_df.sort_values("timestamp").drop_duplicates(
+            subset=["case_id", "model_name"], keep="last"
+        )
+        real_display_df = latest_real_df.copy()
+        real_display_df["recommended_action"] = real_display_df["recommended_action"].map(humanize_action)
+        real_display_df["gold_action"] = real_display_df["gold_action"].map(humanize_action)
+        real_cols = [
+            "timestamp", "case_id", "model_provider", "model_name",
+            "predicted_affect", "predicted_pragmatic_intent",
+            "recommended_action", "gold_action", "confidence", "risk",
+            "action_correct", "unsafe_confidence", "failure_type", "severity",
+            "evidence", "brief_response",
+        ]
+        st.dataframe(real_display_df[real_cols], width="stretch")
 
     st.markdown("### Failure taxonomy")
     taxonomy = pd.DataFrame([
