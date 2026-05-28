@@ -566,15 +566,6 @@ with st.sidebar:
 """
     )
 
-    st.markdown("### Built by")
-    st.markdown(
-        """
-Jayde Zhang  
-NTU CCDS  
-Focus: LLM agents, social-affective evaluation, failure-aware AI
-"""
-    )
-
     with st.expander("Experimental live judge", expanded=False):
         openai_api_key = st.text_input("OpenAI API key", type="password")
         st.caption("Optional. Cached outputs remain the default demo path.")
@@ -717,15 +708,5 @@ with tab4:
 
 with tab5:
     render_interaction_timeline()
-
-st.markdown("---")
-st.markdown("### Contact / About")
-st.markdown(
-"""
-**Built by Jayde Zhang**  
-NTU CCDS  
-Focus: LLM agents, social-affective evaluation, failure-aware AI
-"""
-)
 
 st.caption("MVP prototype with simulated ASR/SER traces and cached model outputs. Next step: connect real model APIs or MERaLiON model outputs.")

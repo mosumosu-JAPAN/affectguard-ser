@@ -121,9 +121,3 @@ affectguard-ser/
 ├── requirements.txt
 └── .gitignore
 ```
-
-## Contact
-
-Jayde Zhang  
-NTU CCDS  
-Focus: LLM agents, social-affective evaluation, failure-aware AI
