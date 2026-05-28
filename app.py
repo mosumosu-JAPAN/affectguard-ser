@@ -29,6 +29,7 @@ st.set_page_config(
 )
 
 OUTPUTS_PATH = Path("data/model_outputs.jsonl")
+RESULTS_DIR = Path("results")
 CANONICAL_ACTIONS = ["listen", "clarify", "repair", "support", "handoff", "close"]
 
 
@@ -536,6 +537,83 @@ def read_real_model_outputs() -> pd.DataFrame:
     return df
 
 
+def export_results() -> Dict:
+    real_df = read_real_model_outputs()
+    if real_df.empty:
+        return {
+            "ok": False,
+            "message": "No real model outputs found yet. Run model judging first.",
+            "files": {},
+        }
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    case_map = {case.case_id: case for case in CASES}
+
+    detailed_df = real_df.copy()
+    detailed_df["title"] = detailed_df["case_id"].map(lambda case_id: case_map[case_id].title)
+    detailed_df["language_style"] = detailed_df["case_id"].map(
+        lambda case_id: getattr(case_map[case_id], "language_style", "")
+    )
+
+    review_cols = [
+        "case_id",
+        "title",
+        "language_style",
+        "failure_type",
+        "severity",
+        "gold_action",
+        "model_provider",
+        "model_name",
+        "recommended_action",
+        "confidence",
+        "action_correct",
+        "unsafe_confidence",
+        "risk",
+        "predicted_affect",
+        "predicted_pragmatic_intent",
+        "evidence",
+        "brief_response",
+    ]
+    review_path = RESULTS_DIR / "model_outputs_review.csv"
+    detailed_df[review_cols].to_csv(review_path, index=False)
+
+    summary_by_model = (
+        detailed_df.groupby(["model_provider", "model_name"], dropna=False)
+        .agg(
+            n_outputs=("case_id", "count"),
+            action_accuracy=("action_correct", "mean"),
+            unsafe_confidence_rate=("unsafe_confidence", "mean"),
+            avg_confidence=("confidence", "mean"),
+        )
+        .reset_index()
+    )
+    summary_by_model_path = RESULTS_DIR / "summary_by_model.csv"
+    summary_by_model.to_csv(summary_by_model_path, index=False)
+
+    summary_by_failure_type = (
+        detailed_df.groupby(["model_provider", "model_name", "failure_type"], dropna=False)
+        .agg(
+            n_cases=("case_id", "nunique"),
+            action_accuracy=("action_correct", "mean"),
+            unsafe_confidence_rate=("unsafe_confidence", "mean"),
+            avg_confidence=("confidence", "mean"),
+        )
+        .reset_index()
+    )
+    summary_by_failure_type_path = RESULTS_DIR / "summary_by_failure_type.csv"
+    summary_by_failure_type.to_csv(summary_by_failure_type_path, index=False)
+
+    return {
+        "ok": True,
+        "message": "Exported result tables.",
+        "files": {
+            "model_outputs_review.csv": review_path,
+            "summary_by_model.csv": summary_by_model_path,
+            "summary_by_failure_type.csv": summary_by_failure_type_path,
+        },
+    }
+
+
 # -----------------------------
 # UI helpers
 # -----------------------------
@@ -850,6 +928,22 @@ with tab3:
             "evidence", "brief_response",
         ]
         st.dataframe(real_display_df[real_cols], width="stretch")
+
+    st.markdown("### Export result tables")
+    if st.button("Export result tables", key="export_result_tables"):
+        export_result = export_results()
+        if not export_result["ok"]:
+            st.info(export_result["message"])
+        else:
+            st.success(export_result["message"])
+            for file_name, file_path in export_result["files"].items():
+                st.download_button(
+                    label=f"Download {file_name}",
+                    data=file_path.read_bytes(),
+                    file_name=file_name,
+                    mime="text/csv",
+                    key=f"download_{file_name}",
+                )
 
     st.markdown("### Failure taxonomy")
     taxonomy = pd.DataFrame([
