@@ -36,6 +36,8 @@ This MVP uses simulated ASR/SER traces and cached model outputs to probe cases w
 - SER detects affective cues,
 - but the downstream agent still makes the wrong interaction decision.
 
+The current MVP isolates the downstream action-selection problem rather than modeling the full causal chain.
+
 Example:
 
 ```text
@@ -73,6 +75,8 @@ The optional live judge is for exploration only. Cached outputs remain the defau
 
 An emotion-to-action gap occurs when affective evidence is available, but the downstream agent still chooses the wrong action.
 
+The current MVP treats this as a downstream action-selection question: assuming affective evidence is available, does the agent choose the right action?
+
 Examples include:
 
 | Failure type | Description |
@@ -83,20 +87,94 @@ Examples include:
 | Low-empathy deflection | The agent repeats generic support instead of taking ownership. |
 | Missed escalation | The agent fails to repair, clarify, or hand off when needed. |
 
+## Evaluation Plan
+
+Future versions will use a smaller canonical action set:
+
+- listen
+- clarify
+- repair
+- support
+- handoff
+- close
+
+Planned metrics include:
+
+- action accuracy,
+- unsafe confidence rate,
+- emotion-to-action gap rate,
+- error rate by failure type,
+- error rate by language style.
+
+Gold labels are currently author-proposed seed labels, not fully validated human-annotated labels. See [`annotation_protocol.md`](annotation_protocol.md) for the planned validation protocol.
+
+## Failure Source Framing
+
+A complete system-level evaluation should separate at least three failure sources:
+
+| Failure source | Description |
+| --- | --- |
+| Perception failure | ASR or SER output is itself wrong. |
+| Interpretation failure | Affect is available, but pragmatic intent is misread. |
+| Action failure | Affect / intent evidence is available, but the downstream action is wrong. |
+
+AffectGuard-SER currently focuses on the third category: downstream action-selection failure.
+
 ## Current Status
 
 This is an early MVP research demo, not a completed benchmark.
 
 The goal is to test whether the emotion-to-action-gap framing is useful for evaluating multilingual speech-to-agent systems.
 
-Future extensions could include:
+## Limitations
 
-- real ASR model outputs,
-- real speech emotion recognition outputs,
-- MERaLiON-style model outputs,
-- audio upload support,
-- streaming interaction traces,
-- larger multilingual evaluation sets.
+AffectGuard-SER is an early MVP failure probe, not a completed benchmark.
+
+The current version has several important limitations:
+
+1. **Simulated ASR/SER traces.**
+   The current demo uses simulated ASR transcripts and SER signals to isolate the downstream action-selection question. It does not yet capture real ASR/SER failure modes such as accent variation, dialectal speech, background noise, or model-specific emotion recognition errors.
+
+2. **Cached model outputs.**
+   The current outputs are cached examples for demonstrating the evaluation flow. They should not be interpreted as empirical results about current SOTA models.
+
+3. **Author-proposed seed labels.**
+   The current gold labels and failure categories are proposed by the author for MVP exploration. They have not yet been validated with independent annotators or inter-annotator agreement.
+
+4. **Limited multilingual coverage.**
+   The initial examples focus mainly on English, Mandarin, Singlish-style particles, and Mandarin-English code-switching. Broader Southeast Asian language coverage would require native-speaker annotation and culturally grounded case construction.
+
+5. **Static interaction setting.**
+   The current demo uses static single-turn cases. It does not yet model streaming speech, memory, relationship history, multi-turn repair, or user correction after an agent failure.
+
+6. **Causal attribution is not complete.**
+   The MVP isolates one downstream question: assuming affective evidence is available, does the agent choose the right action? A complete system-level evaluation would need to distinguish ASR failure, SER failure, pragmatic interpretation failure, and downstream action-selection failure.
+
+## Next Steps
+
+Planned next steps include:
+
+- expand the seed set from 6 cases to 60 structured cases:
+  - English: 15 cases,
+  - Mandarin: 15 cases,
+  - Singlish / Southeast Asian English: 15 cases,
+  - Mandarin-English code-switching: 15 cases;
+- replace cached outputs with real GPT / Claude action judging;
+- record model name, timestamp, prompt, and raw response for each run;
+- add an annotation protocol for gold actions and failure categories;
+- validate labels with 2-3 independent annotators;
+- connect real ASR outputs, such as Whisper or MERaLiON-ASR transcripts;
+- connect real SER model outputs for emotion / valence / arousal;
+- add streaming interaction traces and multi-turn repair cases.
+
+Suggested implementation roadmap:
+
+- V1: static seed cases,
+- V2: real GPT / Claude action judging,
+- V3: real ASR/SER outputs,
+- V4: streaming interaction timeline,
+- V5: multi-turn repair evaluation,
+- V6: annotator validation / user study.
 
 ## Run Locally
 
@@ -121,6 +199,9 @@ http://localhost:8501
 ```text
 affectguard-ser/
 ├── app.py
+├── annotation_protocol.md
+├── assets/
+│   └── screenshot.png
 ├── README.md
 ├── requirements.txt
 └── .gitignore
