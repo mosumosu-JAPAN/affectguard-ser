@@ -126,6 +126,8 @@ This is an early MVP research demo, not a completed benchmark.
 
 The goal is to test whether the emotion-to-action-gap framing is useful for evaluating multilingual speech-to-agent systems.
 
+The current 12-case version is not a benchmark. It is a structured seed set: 6 failure categories x 2 cases each.
+
 ## Limitations
 
 AffectGuard-SER is an early MVP failure probe, not a completed benchmark.
@@ -154,11 +156,7 @@ The current version has several important limitations:
 
 Planned next steps include:
 
-- expand the seed set from 6 cases to 60 structured cases:
-  - English: 15 cases,
-  - Mandarin: 15 cases,
-  - Singlish / Southeast Asian English: 15 cases,
-  - Mandarin-English code-switching: 15 cases;
+- refine the current 12-case structured seed set before expanding toward a larger case set;
 - replace cached outputs with real GPT / Claude action judging;
 - record model name, timestamp, prompt, and raw response for each run;
 - add an annotation protocol for gold actions and failure categories;
@@ -170,11 +168,12 @@ Planned next steps include:
 Suggested implementation roadmap:
 
 - V1: static seed cases,
-- V2: real GPT / Claude action judging,
-- V3: real ASR/SER outputs,
-- V4: streaming interaction timeline,
-- V5: multi-turn repair evaluation,
-- V6: annotator validation / user study.
+- V2: expand from 6 to 12 seed cases,
+- V3: real GPT / Claude action judging on a separate branch,
+- V4: real ASR/SER outputs,
+- V5: streaming interaction timeline and multi-turn repair evaluation,
+- V6: expand toward a 60-case structured seed set,
+- V7: annotator validation / user study.
 
 ## Run Locally
 

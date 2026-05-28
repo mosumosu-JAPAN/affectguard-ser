@@ -79,13 +79,15 @@ The initial seed labels should not be described as validated gold labels until t
 
 ## Initial Case Expansion Plan
 
-The first expanded seed set should target 60 structured cases:
+The current expanded seed set targets 12 structured cases. This keeps the MVP small enough to inspect while covering the failure taxonomy more completely than the initial 6-case demo.
 
 | Language style | Target count |
 | --- | ---: |
-| English | 15 |
-| Mandarin | 15 |
-| Singlish / Southeast Asian English | 15 |
-| Mandarin-English code-switching | 15 |
+| English | 3 |
+| Mandarin | 3 |
+| Singlish / Southeast Asian English | 3 |
+| Mandarin-English code-switching | 3 |
 
 Broader Southeast Asian language coverage should require native-speaker annotation and culturally grounded case construction.
+
+A later roadmap milestone can expand this structure toward 60 cases after the label protocol and failure taxonomy are more stable.
