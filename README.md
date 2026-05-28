@@ -64,6 +64,7 @@ After optional model judging, the app can export three CSV files for pilot analy
 These tables are intended to make the MVP easier to inspect, debug, and share with research collaborators. They should not be interpreted as benchmark results until the labels and model outputs are validated.
 
 Pilot summaries use the latest output for each model-case pair when multiple runs exist.
+The top-level dashboard metrics are cached pilot metrics from simulated outputs, not empirical benchmark results.
 
 ## Limitations
 

@@ -980,10 +980,10 @@ with tab3:
         "real model outputs can be exported below."
     )
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Wrong action rate", f"{wrong_action_rate:.0%}")
-    c2.metric("Unsafe confidence rate", f"{unsafe_rate:.0%}")
-    c3.metric("Affect mismatch rate", f"{affect_mismatch_rate:.0%}")
-    c4.metric("Intent mismatch rate", f"{intent_mismatch_rate:.0%}")
+    c1.metric("Cached wrong action rate", f"{wrong_action_rate:.0%}")
+    c2.metric("Cached unsafe confidence rate", f"{unsafe_rate:.0%}")
+    c3.metric("Cached affect mismatch rate", f"{affect_mismatch_rate:.0%}")
+    c4.metric("Cached intent mismatch rate", f"{intent_mismatch_rate:.0%}")
 
     st.markdown("### Audited outputs")
     display_df = eval_df.copy()
