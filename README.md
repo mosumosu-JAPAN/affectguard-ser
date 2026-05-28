@@ -1,5 +1,7 @@
 # AffectGuard-SER
 
+![AffectGuard-SER screenshot](assets/screenshot.png)
+
 A compact failure probe for MERaLiON-style speech-to-agent systems.
 
 AffectGuard-SER is an MVP research demo exploring emotion-to-action gaps in multilingual audio agents.
