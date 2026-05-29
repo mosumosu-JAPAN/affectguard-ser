@@ -975,9 +975,10 @@ with tab3:
     affect_mismatch_rate = (~eval_df["affect_correct"]).mean()
     intent_mismatch_rate = (~eval_df["intent_correct"]).mean()
 
-    st.caption(
-        "Default metrics are computed from cached simulated outputs. After running GPT/Claude judging, "
-        "real model outputs can be exported below."
+    st.warning(
+        "These top-level metrics are computed from cached simulated outputs for the demo. "
+        "They are not benchmark evidence and are not the deduplicated GPT/Claude pilot results. "
+        "Use the experimental real model outputs and exported result tables below for the real-output pilot analysis."
     )
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Cached wrong action rate", f"{wrong_action_rate:.0%}")
