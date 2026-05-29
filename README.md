@@ -25,7 +25,7 @@ The harness separates these two questions so that a model cannot get credit for 
 - SER may detect affective cues.
 - The downstream agent may still choose the wrong action.
 
-The current 12-case version is not a benchmark. It is a structured seed set: 6 failure categories x 2 cases each.
+The repository now includes a 50-case curated evaluation set for local-agent action realization analysis. The original 12-case seed set remains part of the demo narrative, but the current harness and analysis also support the expanded 50-case review set. This is still a prototype evaluation harness, not a benchmark.
 
 ## Current Demo
 
