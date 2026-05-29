@@ -14,6 +14,13 @@ AffectGuard-SER is an MVP research demo for testing emotion-to-action gaps in mu
 
 The app isolates the downstream action-selection problem rather than claiming to benchmark the full speech pipeline.
 
+It is a lightweight local-agent evaluation harness for failure-aware agents. The evaluation is split into two layers:
+
+- **action selection**: does the model choose `repair`, `clarify`, `support`, or `handoff` correctly?
+- **action realization**: does the generated reply actually enact the selected action?
+
+The harness separates these two questions so that a model cannot get credit for selecting the right label while still producing a response that fails to carry it out.
+
 - ASR may preserve the words.
 - SER may detect affective cues.
 - The downstream agent may still choose the wrong action.
@@ -32,6 +39,8 @@ The Streamlit app includes:
 - a cross-model pilot comparison view.
 
 Cached simulated outputs remain the default demo path. Live judging is optional and experimental.
+
+The repository now includes a 50-case curated evaluation set, frontier-model judging, realization-quality labels, metric aggregation, and qualitative error inspection. Initial results on `qwen3:8b` show that selection accuracy alone can miss action-specific enactment failures, especially in clarify and handoff cases.
 
 ## Seed Set
 
