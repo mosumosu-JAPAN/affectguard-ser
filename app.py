@@ -6,8 +6,8 @@ Run:
   pip install streamlit pandas
   streamlit run app.py
 
-This MVP uses simulated speech/SER/ASR traces and cached model outputs.
-It is designed as a sharp demo for MERaLiON-style audio agents:
+This prototype uses simulated ASR/SER traces, author-curated labels, and cached model outputs.
+It is designed as a sharp demo for failure-aware audio agents:
 Detecting emotion is not enough; an agent must know what to do with it.
 """
 
@@ -1728,7 +1728,7 @@ def export_results() -> Dict:
 def render_hero():
     st.markdown("# The emotion was detected. The action was still wrong.")
     st.markdown(
-        "### AffectGuard-SER is an MVP failure probe for multilingual speech-to-agent systems: "
+        "### AffectGuard-SER is a prototype failure probe for multilingual audio agents: "
         "when ASR and SER work, does the downstream agent still choose the right action?"
     )
 
@@ -1741,6 +1741,11 @@ def render_hero():
         c1.metric("ASR", "correct")
         c2.metric("SER", "negative valence", "low arousal")
         c3.metric("Gap", "wrong action")
+
+        st.info(
+            "Label status: the current gold actions are author-proposed prototype labels. "
+            "Ambiguous cases should be resolved by separate adjudication before any benchmark claim."
+        )
 
         bad, good = st.columns(2)
         with bad:
@@ -1889,7 +1894,7 @@ st.caption("AffectGuard-SER")
 
 with st.sidebar:
     st.title("AffectGuard-SER")
-    st.caption("A compact failure probe for MERaLiON-style speech-to-agent systems.")
+    st.caption("A compact failure probe for failure-aware audio agents.")
 
     st.markdown("### What it tests")
     st.markdown(
@@ -2448,7 +2453,7 @@ with tab4:
     st.markdown(
         """
 ## AffectGuard-SER
-### MVP failure probe for speech-to-agent systems
+### Prototype failure probe for failure-aware audio agents
 
 **Problem.** Speech/audio model evaluation often stops at ASR accuracy or speech emotion recognition. Agentic systems also need to choose an appropriate interaction policy.
 
@@ -2456,15 +2461,17 @@ with tab4:
 
 **MVP framing.** AffectGuard-SER is an early research demo, not a completed benchmark.
 
-**Current scope.** It uses simulated ASR/SER traces and cached model outputs to test the usefulness of the emotion-to-action-gap framing.
+**Current scope.** It uses simulated ASR/SER traces, author-curated labels, and cached model outputs to test the usefulness of the emotion-to-action-gap framing.
 
-**Goal.** The goal is to test whether this evaluation framing is useful for multilingual speech-to-agent systems.
+**Goal.** The goal is to test whether this evaluation framing is useful for multilingual audio agents.
 
 **Interaction policy.** The demo asks whether affective evidence changes the agent's action: listen, clarify, repair, hand off, or close.
 
 **What I am looking for.** I am looking for feedback from researchers working on multilingual speech emotion, audio-language models, or agentic audio systems.
 
 **Slogan.** Detecting emotion is not enough; an agent must know what to do with it.
+
+**Label policy.** The current gold labels are prototype labels, not benchmark ground truth. Ambiguous cases require separate review before any stronger claim.
 """
     )
 
