@@ -35,6 +35,11 @@ The current setup evaluates two related questions:
 - Use when the user expresses severe distress, inability to cope, possible safety risk, or when the agent role is insufficient.
 - For capability-boundary cases, the user explicitly needs a human; for risk cases, the escalation is for safety.
 
+Handoff is analyzed in two subtypes in the notes and review materials, while the gold label remains `handoff`:
+
+- `risk_handoff`: severe distress, possible self-harm, violence risk, urgent medical concern, or other crisis-like safety escalation
+- `boundary_handoff`: explicit request for a human, or an interaction that exceeds the agent's role even if acute danger is not the reason
+
 ## Why These Labels Are Comparable
 
 The labels are comparable in this prototype because they share a single local decision space:
@@ -83,8 +88,7 @@ These outputs become benchmark evidence only after:
 ## Data Card Notes
 
 - **Input mode:** simulated ASR/SER cues
-- **Current size:** 50 curated evaluation cases plus earlier 12-case seed examples
+- **Current size:** 50 curated evaluation cases; the earlier 12-case seed is retained only as a legacy demo slice
 - **Label status:** author-curated and provisional
 - **Intended use:** prototype diagnostics for action selection and action realization
 - **Not intended for:** benchmark claims, leaderboard comparisons, or broad generalization
-

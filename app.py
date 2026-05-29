@@ -1881,8 +1881,8 @@ def render_interaction_timeline():
             c4.markdown(f"**Policy**  \n`{step['policy']}`")
 
     st.info(
-        "Future extension: streaming interaction policy — listen, clarify, repair, "
-        "handoff, or close."
+        "Future extension: streaming interaction policy — clarify, repair, support, "
+        "handoff, with listen and close as auxiliary states."
     )
 
 
@@ -2389,7 +2389,7 @@ with tab3:
                 cross_cols.extend(["Ollama recommended_action", "Ollama correct"])
             st.markdown("### Cross-model pilot analysis")
             st.caption(
-                "This is pilot analysis on a 12-case author-labeled seed set, not benchmark evidence."
+                "This is pilot analysis on the legacy 12-case author-labeled seed slice, not benchmark evidence."
             )
             st.dataframe(cross_df[cross_cols], width="stretch")
         else:
@@ -2465,7 +2465,7 @@ with tab4:
 
 **Goal.** The goal is to test whether this evaluation framing is useful for multilingual audio agents.
 
-**Interaction policy.** The demo asks whether affective evidence changes the agent's action: listen, clarify, repair, hand off, or close.
+**Interaction policy.** The demo asks whether affective evidence changes the agent's action across the core labels `clarify`, `repair`, `support`, and `handoff`; `listen` and `close` remain auxiliary dialogue states.
 
 **What I am looking for.** I am looking for feedback from researchers working on multilingual speech emotion, audio-language models, or agentic audio systems.
 

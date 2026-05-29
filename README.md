@@ -32,7 +32,7 @@ The repository now includes a 50-case curated evaluation set for local-agent act
 The Streamlit app includes:
 
 - a sharp first-screen hero for the core research question,
-- 12 structured failure probes,
+- a 50-case curated review set, with the original 12 seed probes retained only as a legacy narrative slice,
 - a cached audit dashboard,
 - optional live model judging with OpenAI or Claude,
 - exportable pilot result tables,
@@ -44,7 +44,7 @@ The repository now includes a 50-case curated evaluation set, frontier-model jud
 
 ## Seed Set
 
-The current seed set covers six failure categories:
+The legacy seed design covers six failure categories:
 
 - premature_closure
 - pragmatic_flattening
@@ -53,14 +53,14 @@ The current seed set covers six failure categories:
 - face_saving_indirectness
 - missed_handoff
 
-The canonical action set is:
+The canonical evaluation action set is:
 
-- listen
 - clarify
 - repair
 - support
 - handoff
-- close
+
+`listen` and `close` are still present as dialogue states in the app and generated responses, but they are not part of the core gold-action set for the current evaluation protocol.
 
 ## Pilot Result Tables
 
@@ -118,7 +118,7 @@ The current version has several important limitations:
 
 Planned next steps include:
 
-- refine the current 12-case structured seed set before expanding further;
+- refine the current 50-case curated review set and its annotation protocol;
 - replace cached outputs with real GPT / Claude action judging;
 - record model name, timestamp, prompt, and raw response for each run;
 - add an annotation protocol for gold actions and failure categories;
@@ -130,11 +130,11 @@ Planned next steps include:
 Suggested implementation roadmap:
 
 - V1: static seed cases,
-- V2: expand from 6 to 12 seed cases,
+- V2: expand from the original 12 seed cases to the 50-case curated review set,
 - V3: real GPT / Claude action judging on a separate branch,
 - V4: real ASR/SER outputs,
 - V5: streaming interaction timeline and multi-turn repair evaluation,
-- V6: expand toward a 60-case structured seed set,
+- V6: expand beyond the current 50-case curated review set,
 - V7: annotator validation / user study.
 
 ## Run Locally

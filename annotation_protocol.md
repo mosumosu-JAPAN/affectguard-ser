@@ -18,6 +18,11 @@ Cases that are genuinely ambiguous should be marked for review instead of being 
 
 `handoff` = escalate when the user expresses severe distress, inability to cope, possible safety risk, or when the agent role is insufficient.
 
+Handoff cases should be annotated with a subtype in notes:
+
+- `risk_handoff` = the escalation is for safety or crisis risk
+- `boundary_handoff` = the user explicitly needs a human, or the agent role is insufficient
+
 `close` = end only when the issue is genuinely resolved.
 
 ## Decision Rules
@@ -25,6 +30,8 @@ Cases that are genuinely ambiguous should be marked for review instead of being 
 If the user has tried several times, was ignored, or is withdrawing after failed help, prefer `repair` over `support` or `listen`.
 
 If the user expresses inability to cope, severe distress, or possible safety risk, prefer `handoff` over `repair`, `support`, or `listen`.
+
+Within `handoff`, distinguish the risk-driven cases from the capability-boundary cases in the case notes so the analysis does not conflate them.
 
 ## Notes
 
