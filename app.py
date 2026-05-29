@@ -1114,30 +1114,27 @@ with tab3:
             st.markdown("#### High-confidence mismatches")
             st.dataframe(mismatch_df[mismatch_cols], width="stretch")
 
-        provider_latest_df = real_df.sort_values("timestamp").drop_duplicates(
-            subset=["model_provider", "case_id"],
-            keep="last",
-        )
-        provider_pivot = provider_latest_df.pivot_table(
+        dedup_real_df = real_df.copy()
+        provider_pivot = dedup_real_df.pivot_table(
             index="case_id",
             columns="model_provider",
             values="recommended_action",
             aggfunc="first",
         ).reset_index()
-        provider_correct = provider_latest_df.pivot_table(
+        provider_correct = dedup_real_df.pivot_table(
             index="case_id",
             columns="model_provider",
             values="action_correct",
             aggfunc="first",
         ).reset_index()
-        provider_confidence = provider_latest_df.pivot_table(
+        provider_confidence = dedup_real_df.pivot_table(
             index="case_id",
             columns="model_provider",
             values="confidence",
             aggfunc="first",
         ).reset_index()
 
-        if {"openai", "anthropic"}.issubset(set(provider_latest_df["model_provider"].unique())):
+        if {"openai", "anthropic"}.issubset(set(dedup_real_df["model_provider"].unique())):
             cross_df = pd.DataFrame({"case_id": [case.case_id for case in CASES]})
             cross_df = cross_df.merge(provider_pivot, on="case_id", how="left")
             cross_df = cross_df.merge(provider_correct, on="case_id", how="left", suffixes=("", "_correct"))
@@ -1183,7 +1180,7 @@ with tab3:
                 "both_wrong",
                 "both_unsafe_confident",
             ]
-            st.markdown("### Cross-model disagreement / agreement")
+            st.markdown("### Cross-model pilot analysis")
             st.caption(
                 "This is pilot analysis on a 12-case author-labeled seed set, not benchmark evidence."
             )
