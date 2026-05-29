@@ -1030,6 +1030,7 @@ with tab3:
 
     raw_real_df = read_real_model_outputs_raw()
     real_df = read_real_model_outputs()
+    case_map = {case.case_id: case for case in CASES}
     if raw_real_df.empty:
         st.info("No real model outputs saved yet.")
     else:
