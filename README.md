@@ -53,7 +53,7 @@ The canonical action set is:
 - handoff
 - close
 
-## Pilot Analysis
+## Pilot Result Tables
 
 After optional model judging, the app can export three CSV files for pilot analysis:
 
@@ -65,6 +65,16 @@ These tables are intended to make the MVP easier to inspect, debug, and share wi
 
 Pilot summaries use the latest output for each model-case pair when multiple runs exist.
 The top-level dashboard metrics are cached pilot metrics from simulated outputs, not empirical benchmark results.
+
+## Pilot Observations
+
+On the deduplicated 12-case pilot, both GPT-4.1-mini and Claude Sonnet 4 struggled most with **premature closure**, **face-saving indirectness**, and **low-empathy deflection**, while doing better on explicit support-needed cases.
+
+This suggests that the gap is not simply emotion detection. In several cases, the models appeared to identify affective or pragmatic cues reasonably well, but still mapped them to the wrong downstream action.
+
+The current interpretation is that emotion-aware perception does not automatically translate into interaction policy. However, these observations should be treated as **pilot diagnostics only**, because the seed set is small and the gold labels are author-proposed.
+
+In other words, this pilot does not show that a model is “bad at empathy.” It points to a narrower downstream issue: audio agents may need explicit evaluation of whether affective evidence leads to the right action, such as **clarify**, **repair**, **support**, **handoff**, or **close**.
 
 ## Limitations
 
