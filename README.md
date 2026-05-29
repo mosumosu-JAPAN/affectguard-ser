@@ -1,8 +1,6 @@
 # AffectGuard-SER
 
-[Public project repo](https://github.com/mosumosu-JAPAN/affectguard-ser)
-
-Live demo link will be added after the Streamlit deployment is publicly accessible.
+[Live demo](https://affectguard-ser-7jl7znidenkmscmure792n.streamlit.app/)
 
 ![AffectGuard-SER screenshot](assets/screenshot.png)
 
